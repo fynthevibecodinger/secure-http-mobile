@@ -80,6 +80,46 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _confirmLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Logout'),
+        content: const Text('Apakah Anda yakin ingin keluar?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      await _storageService.deleteToken();
+      await _checkToken();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Berhasil logout'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,20 +167,39 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          key: const Key('loginButton'),
-                          onPressed: _goToLogin,
-                          icon: const Icon(Icons.login),
-                          label: const Text('Login'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
-                      ),
+                       Row(
+                         children: [
+                           Expanded(
+                             child: ElevatedButton.icon(
+                               key: const Key('loginButton'),
+                               onPressed: _goToLogin,
+                               icon: const Icon(Icons.login),
+                               label: const Text('Login'),
+                               style: ElevatedButton.styleFrom(
+                                 backgroundColor: Colors.deepPurple,
+                                 foregroundColor: Colors.white,
+                                 padding: const EdgeInsets.symmetric(vertical: 16),
+                               ),
+                             ),
+                           ),
+                           if (_hasToken) ...[
+                             const SizedBox(width: 8),
+                             Expanded(
+                               child: ElevatedButton.icon(
+                                 key: const Key('logoutButton'),
+                                 onPressed: _confirmLogout,
+                                 icon: const Icon(Icons.logout),
+                                 label: const Text('Logout'),
+                                 style: ElevatedButton.styleFrom(
+                                   backgroundColor: Colors.red,
+                                   foregroundColor: Colors.white,
+                                   padding: const EdgeInsets.symmetric(vertical: 16),
+                                 ),
+                               ),
+                             ),
+                           ],
+                         ],
+                       ),
                     ],
                   ),
                 ),
