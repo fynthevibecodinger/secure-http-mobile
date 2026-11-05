@@ -62,21 +62,22 @@ class ApiService {
 
   // Simulasi login untuk mendapatkan token
   Future<String> login(String email, String password) async {
-    try {
-      // Simulasi request login
-      await Future.delayed(const Duration(seconds: 1));
-      if (email.isNotEmpty && password.isNotEmpty) {
-        // Token dummy (dalam aplikasi nyata, ini dari server)
-        final token = 'dummy_token_${DateTime.now().millisecondsSinceEpoch}';
-        // ✅ Logging aman: tidak mencetak token
-        print('Login berhasil untuk email: $email');
-        return token;
-      } else {
-        throw Exception('Email dan password tidak boleh kosong');
-      }
-    } catch (e) {
-      throw Exception('Login gagal: $e');
+    // Simulasi request login
+    await Future.delayed(const Duration(seconds: 1));
+
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty || password.isEmpty) {
+      throw Exception('Email dan password tidak boleh kosong');
     }
+    if (!trimmedEmail.contains('@')) {
+      throw Exception('Format email tidak valid');
+    }
+
+    // Token dummy (dalam aplikasi nyata, ini dari server)
+    final token = 'dummy_token_${DateTime.now().millisecondsSinceEpoch}';
+    // ✅ Logging aman: tidak mencetak token
+    print('Login berhasil untuk email: $trimmedEmail');
+    return token;
   }
 }
 

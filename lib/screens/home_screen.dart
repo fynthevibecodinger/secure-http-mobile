@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/secure_storage_service.dart';
+import 'login_screen.dart';
 import 'user_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -57,6 +58,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _goToLogin() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+    if (!mounted) return;
+    await _checkToken(); // refresh status setelah kembali dari login
+  }
+
   Future<void> _deleteToken() async {
     await _storageService.deleteToken();
     await _checkToken();
@@ -84,6 +94,58 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Section Login
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.login, color: Colors.deepPurple),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _hasToken
+                            ? 'Status: Sudah login'
+                            : 'Status: Belum login',
+                        style: TextStyle(
+                          color: _hasToken
+                              ? Colors.green[800]
+                              : Colors.red[800],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          key: const Key('loginButton'),
+                          onPressed: _goToLogin,
+                          icon: const Icon(Icons.login),
+                          label: const Text('Login'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               // Section 1: Secure Storage
               Card(
                 child: Padding(
