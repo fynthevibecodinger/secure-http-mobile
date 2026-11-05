@@ -9,12 +9,12 @@ class ApiService {
   static const String _baseUrl = 'https://jsonplaceholder.typicode.com';
   static const Duration _timeout = Duration(seconds: 10);
   // GET /users
-  Future<List<User>> getUsers() async {
+  Future<List<User>> getUsers({Duration timeout = const Duration(milliseconds: 10)}) async {
     try {
       print('Request GET: $_baseUrl/users');
       final response = await http
           .get(Uri.parse('$_baseUrl/users'))
-          .timeout(_timeout);
+          .timeout(timeout);
       // Logging aman: hanya status code
       print('Response status: ${response.statusCode}');
       if (response.statusCode == 200) {
