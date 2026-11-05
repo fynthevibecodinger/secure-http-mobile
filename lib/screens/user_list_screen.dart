@@ -11,13 +11,23 @@ class UserListScreen extends StatefulWidget {
 
 class _UserListScreenState extends State<UserListScreen> {
   final ApiService _apiService = ApiService();
+  final TextEditingController _searchController = TextEditingController();
   List<User> _users = [];
+  List<User> _filteredUsers = [];
   bool _isLoading = true;
   String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
     _loadUsers();
+    _searchController.addListener(_filterUsers);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUsers() async {
@@ -29,6 +39,7 @@ class _UserListScreenState extends State<UserListScreen> {
       final users = await _apiService.getUsers();
       setState(() {
         _users = users;
+        _filteredUsers = users;
         _isLoading = false;
       });
     } catch (e) {
@@ -37,6 +48,17 @@ class _UserListScreenState extends State<UserListScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _filterUsers() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredUsers = _users.where((user) {
+        final nameMatch = user.name.toLowerCase().contains(query);
+        final emailMatch = user.email.toLowerCase().contains(query);
+        return nameMatch || emailMatch;
+      }).toList();
+    });
   }
 
   @override
@@ -49,12 +71,39 @@ class _UserListScreenState extends State<UserListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadUsers,
+            onPressed: () {
+              _searchController.clear();
+              _loadUsers();
+            },
             tooltip: 'Muat ulang',
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Cari berdasarkan nama atau email',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _filterUsers();
+                        },
+                      )
+                    : null,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
+          Expanded(child: _buildBody()),
+        ],
+      ),
     );
   }
 
@@ -107,13 +156,18 @@ class _UserListScreenState extends State<UserListScreen> {
     if (_users.isEmpty) {
       return const Center(child: Text('Tidak ada data pengguna'));
     }
+
+    if (_filteredUsers.isEmpty) {
+      return const Center(child: Text('Pengguna tidak ditemukan'));
+    }
+
     // Success state
     return RefreshIndicator(
       onRefresh: _loadUsers,
       child: ListView.builder(
-        itemCount: _users.length,
+        itemCount: _filteredUsers.length,
         itemBuilder: (context, index) {
-          final user = _users[index];
+          final user = _filteredUsers[index];
           return UserCard(
             user: user,
             onTap: () {
